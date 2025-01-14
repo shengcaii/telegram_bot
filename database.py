@@ -19,3 +19,11 @@ def add_member(name, role):
     c.execute('INSERT INTO members (name, role) VALUES (?, ?)', (name, role))
     conn.commit()
     conn.close()
+
+def get_members():
+    conn = sqlite3.connect('team.db')
+    c = conn.cursor()
+    c.execute('SELECT name, role FROM members')
+    members = c.fetchall()
+    conn.close()
+    return members
