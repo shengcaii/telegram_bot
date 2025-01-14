@@ -6,103 +6,139 @@ import os
 from dotenv import load_dotenv
 
 def init_db():
-    conn = sqlite3.connect('team.db')
-    c = conn.cursor()
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS members (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL,
-            role TEXT NOT NULL
-        )
-    ''')
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS documents (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            member_id INTEGER,
-            document BLOB,
-            FOREIGN KEY (member_id) REFERENCES members (id)
-        )
-    ''')
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS videos (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            member_id INTEGER,
-            video BLOB,
-            FOREIGN KEY (member_id) REFERENCES members (id)
-        )
-    ''')
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS images (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            member_id INTEGER,
-            image BLOB,
-            FOREIGN KEY (member_id) REFERENCES members (id)
-        )
-    ''')
-    conn.commit()
-    conn.close()
+    try:
+        conn = sqlite3.connect('team.db')
+        c = conn.cursor()
+        c.execute('''
+            CREATE TABLE IF NOT EXISTS members (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                role TEXT NOT NULL
+            )
+        ''')
+        c.execute('''
+            CREATE TABLE IF NOT EXISTS documents (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                member_id INTEGER,
+                document BLOB,
+                FOREIGN KEY (member_id) REFERENCES members (id)
+            )
+        ''')
+        c.execute('''
+            CREATE TABLE IF NOT EXISTS videos (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                member_id INTEGER,
+                video BLOB,
+                FOREIGN KEY (member_id) REFERENCES members (id)
+            )
+        ''')
+        c.execute('''
+            CREATE TABLE IF NOT EXISTS images (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                member_id INTEGER,
+                image BLOB,
+                FOREIGN KEY (member_id) REFERENCES members (id)
+            )
+        ''')
+        conn.commit()
+    except sqlite3.Error as e:
+        print(f"Database error: {e}")
+    finally:
+        conn.close()
 
 def add_member(name, role):
-    conn = sqlite3.connect('team.db')
-    c = conn.cursor()
-    c.execute('INSERT INTO members (name, role) VALUES (?, ?)', (name, role))
-    member_id = c.lastrowid
-    conn.commit()
-    conn.close()
-    return member_id
+    try:
+        conn = sqlite3.connect('team.db')
+        c = conn.cursor()
+        c.execute('INSERT INTO members (name, role) VALUES (?, ?)', (name, role))
+        member_id = c.lastrowid
+        conn.commit()
+        return member_id
+    except sqlite3.Error as e:
+        print(f"Database error: {e}")
+    finally:
+        conn.close()
 
 def add_document(member_id, document):
-    conn = sqlite3.connect('team.db')
-    c = conn.cursor()
-    c.execute('INSERT INTO documents (member_id, document) VALUES (?, ?)', (member_id, document))
-    conn.commit()
-    conn.close()
+    try:
+        conn = sqlite3.connect('team.db')
+        c = conn.cursor()
+        c.execute('INSERT INTO documents (member_id, document) VALUES (?, ?)', (member_id, document))
+        conn.commit()
+    except sqlite3.Error as e:
+        print(f"Database error: {e}")
+    finally:
+        conn.close()
 
 def add_video(member_id, video):
-    conn = sqlite3.connect('team.db')
-    c = conn.cursor()
-    c.execute('INSERT INTO videos (member_id, video) VALUES (?, ?)', (member_id, video))
-    conn.commit()
-    conn.close()
+    try:
+        conn = sqlite3.connect('team.db')
+        c = conn.cursor()
+        c.execute('INSERT INTO videos (member_id, video) VALUES (?, ?)', (member_id, video))
+        conn.commit()
+    except sqlite3.Error as e:
+        print(f"Database error: {e}")
+    finally:
+        conn.close()
 
 def add_image(member_id, image):
-    conn = sqlite3.connect('team.db')
-    c = conn.cursor()
-    c.execute('INSERT INTO images (member_id, image) VALUES (?, ?)', (member_id, image))
-    conn.commit()
-    conn.close()
+    try:
+        conn = sqlite3.connect('team.db')
+        c = conn.cursor()
+        c.execute('INSERT INTO images (member_id, image) VALUES (?, ?)', (member_id, image))
+        conn.commit()
+    except sqlite3.Error as e:
+        print(f"Database error: {e}")
+    finally:
+        conn.close()
 
 def get_members():
-    conn = sqlite3.connect('team.db')
-    c = conn.cursor()
-    c.execute('SELECT id, name, role FROM members')
-    members = c.fetchall()
-    conn.close()
-    return members
+    try:
+        conn = sqlite3.connect('team.db')
+        c = conn.cursor()
+        c.execute('SELECT id, name, role FROM members')
+        members = c.fetchall()
+        return members
+    except sqlite3.Error as e:
+        print(f"Database error: {e}")
+    finally:
+        conn.close()
 
 def get_documents(member_id):
-    conn = sqlite3.connect('team.db')
-    c = conn.cursor()
-    c.execute('SELECT document FROM documents WHERE member_id = ?', (member_id,))
-    documents = c.fetchall()
-    conn.close()
-    return documents
+    try:
+        conn = sqlite3.connect('team.db')
+        c = conn.cursor()
+        c.execute('SELECT document FROM documents WHERE member_id = ?', (member_id,))
+        documents = c.fetchall()
+        return documents
+    except sqlite3.Error as e:
+        print(f"Database error: {e}")
+    finally:
+        conn.close()
 
 def get_videos(member_id):
-    conn = sqlite3.connect('team.db')
-    c = conn.cursor()
-    c.execute('SELECT video FROM videos WHERE member_id = ?', (member_id,))
-    videos = c.fetchall()
-    conn.close()
-    return videos
+    try:
+        conn = sqlite3.connect('team.db')
+        c = conn.cursor()
+        c.execute('SELECT video FROM videos WHERE member_id = ?', (member_id,))
+        videos = c.fetchall()
+        return videos
+    except sqlite3.Error as e:
+        print(f"Database error: {e}")
+    finally:
+        conn.close()
 
 def get_images(member_id):
-    conn = sqlite3.connect('team.db')
-    c = conn.cursor()
-    c.execute('SELECT image FROM images WHERE member_id = ?', (member_id,))
-    images = c.fetchall()
-    conn.close()
-    return images
+    try:
+        conn = sqlite3.connect('team.db')
+        c = conn.cursor()
+        c.execute('SELECT image FROM images WHERE member_id = ?', (member_id,))
+        images = c.fetchall()
+        return images
+    except sqlite3.Error as e:
+        print(f"Database error: {e}")
+    finally:
+        conn.close()
 
 # Load environment variables from .env file
 load_dotenv()
