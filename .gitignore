@@ -15,3 +15,8 @@ instance/
 # OS specific
 .DS_Store
 Thumbs.db
+
+# Additional folders
+Lib/
+Scripts/
+Include/
