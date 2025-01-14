@@ -1,8 +1,9 @@
 from flask import Flask, request, jsonify
-from telegram import Bot, Update
-from telegram.ext import CommandHandler, MessageHandler, Filters, Dispatcher
+from telegram import Bot, Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import CommandHandler, MessageHandler, Filters, Dispatcher, CallbackQueryHandler
 import os
 from dotenv import load_dotenv
+from database import init_db, add_member, get_members
 
 # Load environment variables from .env file
 load_dotenv()
@@ -30,7 +31,7 @@ def webhook():
 # Command handlers
 def start(update, context):
     chat_id = update.message.chat_id
-    context.bot.send_message(chat_id=chat_id, text="Welcome to the connectorhook bot!")
+    context.bot.send_message(chat_id=chat_id, text="Welcome to the team bot! Use /addmember <name> <role> to add a new member. Use /listmembers to list all members.")
 
 def add_member_command(update, context):
     chat_id = update.message.chat_id
@@ -47,7 +48,6 @@ def button(update, context):
     if query.data == 'add_member':
         context.bot.send_message(chat_id=chat_id, text="Please enter the member's name and role in the format: /addmember <name> <role>")
 
-
 def list_members_command(update, context):
     chat_id = update.message.chat_id
     members = get_members()
@@ -63,8 +63,6 @@ dispatcher.add_handler(CommandHandler("addmember", add_member_command))
 dispatcher.add_handler(CommandHandler("listmembers", list_members_command))
 dispatcher.add_handler(CallbackQueryHandler(button))
 
-
-
 # Start the Flask server
 if __name__ == '__main__':
     # Set the webhook URL
@@ -75,6 +73,4 @@ if __name__ == '__main__':
         print("Webhook set successfully")
     else:
         print("Failed to set webhook")
-    
-    # Start the Flask server
     app.run(host='0.0.0.0', port=5000)
