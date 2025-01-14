@@ -1,0 +1,17 @@
+# Python specific
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.env
+
+# Environment variables
+.env
+
+# Flask specific
+instance/
+.webassets-cache
+
+# OS specific
+.DS_Store
+Thumbs.db
