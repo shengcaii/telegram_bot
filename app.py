@@ -33,6 +33,10 @@ def start(update, context):
     chat_id = update.message.chat_id
     context.bot.send_message(chat_id=chat_id, text="Welcome to the team bot! Use /addmember <name> <role> to add a new member. Use /listmembers to list all members.")
 
+def help(update, context):
+    chat_id = update.message.chat_id
+    context.bot.send_message(chat_id=chat_id, text="This bot is design to add your team members and share data like images, videos, and documents with your team members. You can use the following commands:\n\n/addmember <name> <role> - Add a new team member\n/listmembers - List all team members")
+
 def add_member_command(update, context):
     chat_id = update.message.chat_id
     keyboard = [
