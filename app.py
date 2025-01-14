@@ -25,6 +25,11 @@ dispatcher = Dispatcher(bot, None, workers=0)
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Root route for UptimeRobot
+@app.route('/')
+def home():
+    return "Bot is running!"
+
 # Webhook endpoint
 @app.route('/webhook', methods=['POST'])
 def webhook():
