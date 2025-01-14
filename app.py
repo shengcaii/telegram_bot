@@ -32,7 +32,7 @@ def webhook():
 if __name__ == '__main__':
     # Set the webhook URL
     import requests
-    WEBHOOK_URL = "https://your-deployed-app.com/webhook"
+    WEBHOOK_URL = "https://telegram-bot-o9g1.onrender.com/webhook"
     response = requests.get(f"https://api.telegram.org/bot{BOT_TOKEN}/setWebhook?url={WEBHOOK_URL}")
     print(response.json())
     
