@@ -3,7 +3,7 @@ from telegram import Bot, Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CommandHandler, MessageHandler, Filters, Dispatcher, CallbackQueryHandler
 import os
 from dotenv import load_dotenv
-from database import init_db, add_member, get_members
+from database import init_db, add_member, add_document, add_video, add_image, get_members
 
 # Load environment variables from .env file
 load_dotenv()
@@ -37,6 +37,7 @@ def help(update, context):
     chat_id = update.message.chat_id
     context.bot.send_message(chat_id=chat_id, text="This bot is design to add your team members and share data like images, videos, and documents with your team members. You can use the following commands:\n\n/addmember <name> <role> - Add a new team member\n/listmembers - List all team members")
 
+
 def add_member_command(update, context):
     chat_id = update.message.chat_id
     keyboard = [
@@ -50,21 +51,64 @@ def button(update, context):
     chat_id = query.message.chat_id
 
     if query.data == 'add_member':
-        context.bot.send_message(chat_id=chat_id, text="Please enter the member's name and role in the format: /addmember <name> <role>")
+        context.user_data['adding_member'] = True
+        context.bot.send_message(chat_id=chat_id, text="Please enter the member's name and role in the format: <name> <role>")
+
+def handle_message(update, context):
+    chat_id = update.message.chat_id
+    if context.user_data.get('adding_member'):
+        try:
+            name, role = update.message.text.split(' ', 1)
+            member_id = add_member(name, role)
+            context.user_data['member_id'] = member_id
+            context.user_data['awaiting_document'] = True
+            context.bot.send_message(chat_id=chat_id, text="Please send the document, image, or video.")
+        except ValueError:
+            context.bot.send_message(chat_id=chat_id, text="Invalid format. Please enter the member's name and role in the format: <name> <role>")
+        context.user_data['adding_member'] = False
+    elif context.user_data.get('awaiting_document'):
+        document = update.message.document
+        photo = update.message.photo[-1] if update.message.photo else None
+        video = update.message.video
+        member_id = context.user_data['member_id']
+        if document:
+            file_id = document.file_id
+            file = context.bot.get_file(file_id)
+            file_data = file.download_as_bytearray()
+            add_document(member_id, file_data)
+            context.bot.send_message(chat_id=chat_id, text=f"Document added successfully for member {member_id}.")
+        elif photo:
+            file_id = photo.file_id
+            file = context.bot.get_file(file_id)
+            file_data = file.download_as_bytearray()
+            add_image(member_id, file_data)
+            context.bot.send_message(chat_id=chat_id, text=f"Image added successfully for member {member_id}.")
+        elif video:
+            file_id = video.file_id
+            file = context.bot.get_file(file_id)
+            file_data = file.download_as_bytearray()
+            add_video(member_id, file_data)
+            context.bot.send_message(chat_id=chat_id, text=f"Video added successfully for member {member_id}.")
+        else:
+            context.bot.send_message(chat_id=chat_id, text="Please send a valid document, image, or video.")
+        context.user_data['awaiting_document'] = False
 
 def list_members_command(update, context):
     chat_id = update.message.chat_id
     members = get_members()
     if members:
-        members_list = "\n".join([f"{name} - {role}" for name, role in members])
+        members_list = "\n".join([f"{name} - {role}" for _, name, role in members])
         context.bot.send_message(chat_id=chat_id, text=f"Team Members:\n{members_list}")
     else:
         context.bot.send_message(chat_id=chat_id, text="No members found.")
 
 # Set up the dispatcher handlers
 dispatcher.add_handler(CommandHandler("start", start))
+dispatcher.add_handler(CommandHandler("help", help))
 dispatcher.add_handler(CommandHandler("addmember", add_member_command))
 dispatcher.add_handler(CommandHandler("listmembers", list_members_command))
+dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, handle_message))
+dispatcher.add_handler(MessageHandler(Filters.document | Filters.photo | Filters.video, handle_message))
 dispatcher.add_handler(CallbackQueryHandler(button))
 
 # Start the Flask server
