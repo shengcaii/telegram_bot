@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify
 from database import init_db
-import bot  # Import the bot module to ensure it runs
+from bot import main  # Import the bot module to ensure it runs
 
 app = Flask(__name__)
 
@@ -13,8 +13,6 @@ def home():
 
 if __name__ == "__main__":
     # Start the bot
-    bot.updater.start_polling()
-    print("Bot started!")
-    
+    main()
     # Start the Flask app
     app.run(host='0.0.0.0', port=5000)
