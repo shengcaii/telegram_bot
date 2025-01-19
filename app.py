@@ -29,6 +29,7 @@ WEBHOOK_URL = os.getenv("WEBHOOK_URL")
 # States for conversation
 NAME, CATEGORY, LOCATION, DETAILS = range(4)
 
+# Initialize Flask app
 app = Flask(__name__)
 
 # Initialize bot application
@@ -56,38 +57,35 @@ application.add_handler(conv_handler)
 # Initialize database
 init_db()
 
-# Initialize the application
-async def initialize():
-    await application.initialize()
+# Set up webhook
+async def set_webhook():
     await application.bot.set_webhook(url=f"{WEBHOOK_URL}/webhook")
-    
-# Run the initialization
-asyncio.run(initialize())
+
+# Run the webhook setup
+asyncio.run(set_webhook())
 
 @app.route("/")
 def index():
     return "Bot is running!"
 
 @app.route("/webhook", methods=["POST"])
-def webhook_handler():
+async def webhook_handler():
     """Handle incoming webhook updates"""
     if request.method == "POST":
         try:
-            # Create an event loop for this request
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            
+            # Parse the incoming update
             update = Update.de_json(data=request.get_json(), bot=application.bot)
-            loop.run_until_complete(application.process_update(update))
+            
+            # Process the update asynchronously
+            await application.process_update(update)
             
             return "ok"
         except Exception as e:
             logger.error(f"Error processing update: {str(e)}")
             return str(e), 500
-        finally:
-            loop.close()
     
     return "Only POST requests are allowed"
 
 if __name__ == "__main__":
+    # Start the Flask app
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
