@@ -23,8 +23,8 @@ load_dotenv()
 
 # Get environment variables
 BOT_TOKEN = os.getenv("BOT_TOKEN")
-WEBHOOK_URL = os.getenv("WEBHOOK_URL")
-PORT = int(os.getenv("PORT", 5000))
+WEBHOOK_URL = os.getenv("WEBHOOK_URL")  # Your Render URL
+PORT = int(os.getenv("PORT", 10000))
 
 # States for conversation handler
 NAME, CATEGORY, LOCATION, DETAILS = range(4)
@@ -77,8 +77,8 @@ async def webhook():
             # Get the update data
             update_data = request.get_json()
             
-            # Log incoming update (be careful not to log sensitive data in production)
-            logger.info(f"Received update: {update_data.get('update_id')}")
+            # Log incoming update
+            logger.info(f"Received update: {update_data}")
             
             # Parse update from Telegram
             update = Update.de_json(update_data, application.bot)
@@ -89,66 +89,37 @@ async def webhook():
             return jsonify({"status": "success"})
             
         except Exception as e:
-            # Log the error
             logger.error(f"Error processing update: {str(e)}", exc_info=True)
             return jsonify({
                 "status": "error",
-                "message": "Internal server error",
-                "error": str(e)
+                "message": str(e)
             }), 500
-            
-    return jsonify({
-        "status": "error",
-        "message": "Method not allowed"
-    }), 405
+    
+    return jsonify({"status": "error", "message": "Method not allowed"}), 405
 
-@app.route('/setwebhook', methods=['GET'])
-async def setup_webhook():
+@app.route('/set_webhook', methods=['GET'])
+async def set_webhook():
     """Endpoint to manually set up webhook"""
     try:
         webhook_url = f"{WEBHOOK_URL}/webhook/{BOT_TOKEN}"
         await application.bot.set_webhook(url=webhook_url)
         
         webhook_info = await application.bot.get_webhook_info()
+        logger.info(f"Webhook info: {webhook_info}")
         
         return jsonify({
             "status": "success",
             "message": "Webhook set up successfully",
             "webhook_url": webhook_url,
-            "webhook_info": {
-                "url": webhook_info.url,
-                "has_custom_certificate": webhook_info.has_custom_certificate,
-                "pending_update_count": webhook_info.pending_update_count,
-                "last_error_date": webhook_info.last_error_date,
-                "last_error_message": webhook_info.last_error_message
-            }
+            "webhook_info": webhook_info.to_dict()
         })
         
     except Exception as e:
         logger.error(f"Error setting webhook: {str(e)}", exc_info=True)
         return jsonify({
             "status": "error",
-            "message": "Failed to set webhook",
-            "error": str(e)
-        }), 500
-
-@app.route('/removewebhook', methods=['GET'])
-async def remove_webhook():
-    """Endpoint to manually remove webhook"""
-    try:
-        await application.bot.delete_webhook()
-        return jsonify({
-            "status": "success",
-            "message": "Webhook removed successfully"
-        })
-    except Exception as e:
-        logger.error(f"Error removing webhook: {str(e)}", exc_info=True)
-        return jsonify({
-            "status": "error",
-            "message": "Failed to remove webhook",
-            "error": str(e)
+            "message": str(e)
         }), 500
 
 if __name__ == "__main__":
-    # Start Flask app
-    app.run(host='0.0.0.0')
+    app.run(host='0.0.0.0', port=PORT)
