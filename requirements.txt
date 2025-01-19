@@ -1,5 +1,5 @@
 Flask==3.0.0
-Flash[async]=3.0.0
+Flash[async]==3.0.0
 Werkzeug==2.1.1
 python-telegram-bot==21.10.0
 urllib3==1.26.5
