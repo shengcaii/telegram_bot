@@ -1,6 +1,6 @@
 from telegram import Update
 from telegram.ext import CommandHandler, MessageHandler, filters, ApplicationBuilder, ConversationHandler, ContextTypes
-from database import dbupload, dbsearch, get_user_resources, delete_resource
+from database import dbupload, dbsearch, delete_resource
 import os
 from dotenv import load_dotenv
 import logging
