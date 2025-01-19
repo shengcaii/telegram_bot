@@ -101,7 +101,7 @@ async def webhook():
 async def set_webhook():
     """Endpoint to manually set up webhook"""
     try:
-        webhook_url = f"{WEBHOOK_URL}/webhook/{BOT_TOKEN}"
+        webhook_url = f"{WEBHOOK_URL}/webhook"
         await application.bot.set_webhook(url=webhook_url)
         
         webhook_info = await application.bot.get_webhook_info()
