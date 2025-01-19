@@ -10,6 +10,7 @@ from database import init_db
 import os
 from dotenv import load_dotenv
 import logging
+import asyncio
 
 # Enable logging
 logging.basicConfig(
@@ -30,7 +31,7 @@ NAME, CATEGORY, LOCATION, DETAILS = range(4)
 
 app = Flask(__name__)
 
-async def init_webhook():
+def init_webhook():
     """Initialize bot and set webhook"""
     # Initialize bot application
     application = Application.builder().token(BOT_TOKEN).build()
@@ -56,7 +57,7 @@ async def init_webhook():
 
     # Set webhook
     webhook_url = f"{WEBHOOK_URL}/webhook"
-    await application.bot.set_webhook(url=webhook_url)
+    asyncio.run(application.bot.set_webhook(url=webhook_url))
     
     return application
 
@@ -64,29 +65,31 @@ async def init_webhook():
 init_db()
 
 # Create global application object
-application = None
+application = init_webhook()
 
 @app.route("/")
-async def index():
+def index():
     return "Bot is running!"
 
 @app.route(f"/webhook", methods=["POST"])
-async def webhook_handler():
+def webhook_handler():
     """Handle incoming webhook updates"""
     if request.method == "POST":
-        await application.update_queue.put(
-            Update.de_json(data=request.get_json(), bot=application.bot)
-        )
+        # Create an event loop for this request
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        
+        try:
+            update = Update.de_json(data=request.get_json(), bot=application.bot)
+            loop.run_until_complete(application.process_update(update))
+        finally:
+            loop.close()
+            
         return "ok"
     
     return "Only POST requests are allowed"
 
-# Initialize the bot and set webhook
-@app.before_first_request
-async def setup():
-    global application
-    application = await init_webhook()
-    logger.info("Bot started and webhook set!")
-
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
+    # Run the Flask application
+    port = int(os.environ.get("PORT", 8080))
+    app.run(host="0.0.0.0", port=port)
