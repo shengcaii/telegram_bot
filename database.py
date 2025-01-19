@@ -43,7 +43,6 @@ def init_db():
         '''
         cursor.execute(create_table_query)
         connection.commit()
-<<<<<<< HEAD
         print("Table created successfully.")
         cursor.close()
         connection.close()
@@ -70,37 +69,10 @@ def dbupload(name, category, location, contact, details):
         return None
 
 def dbsearch(query):
-=======
-        cursor.close()
-        connection.close()
-
-def get_user_resources(user_id):
->>>>>>> c899748a2451722d99a1674cd36ae613e948908f
     connection = get_db_connection()
     if connection:
         try:
             cursor = connection.cursor()
-<<<<<<< HEAD
-            search_query = '''
-            SELECT name, category, location, details FROM resource
-            WHERE name ILIKE %s OR category ILIKE %s OR location ILIKE %s OR details ILIKE %s;
-            '''
-            cursor.execute(search_query, (f"%{query}%", f"%{query}%", f"%{query}%", f"%{query}%"))
-            results = cursor.fetchall()
-            return results
-        except Exception as e:
-            print(f"Failed to search: {e}")
-            return []
-        finally:
-            cursor.close()
-            connection.close()
-    else:
-        print("No connection to the database.")
-        return []
-
-# Example usage
-if __name__ == "__main__":
-=======
             query = '''
                 SELECT id, name, category, location, description 
                 FROM resource 
@@ -254,7 +226,6 @@ def dbsearch(query_terms):
 # Example usage
 if __name__ == "__main__":
     init_db()
->>>>>>> c899748a2451722d99a1674cd36ae613e948908f
     query = "sport"
     results = dbsearch(query)
     print(results)

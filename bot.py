@@ -1,10 +1,6 @@
 from telegram import Update
 from telegram.ext import CommandHandler, MessageHandler, filters, ApplicationBuilder, ConversationHandler, ContextTypes
-<<<<<<< HEAD
-from database import dbupload, dbsearch
-=======
 from database import dbupload, dbsearch, get_user_resources, delete_resource
->>>>>>> c899748a2451722d99a1674cd36ae613e948908f
 import os
 from dotenv import load_dotenv
 import logging
@@ -28,11 +24,7 @@ NAME, CATEGORY, LOCATION, DETAILS = range(4)
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     first_name = update.effective_user.first_name
-<<<<<<< HEAD
-    await context.bot.send_message(chat_id=update.effective_chat.id, text=f"Hey {first_name}! Welcome to the resource sharing bot.")
-=======
     await context.bot.send_message(chat_id=update.effective_chat.id, text=f"Hey {first_name}! Welcome to the advertisor bot.")
->>>>>>> c899748a2451722d99a1674cd36ae613e948908f
 
 async def upload_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await context.bot.send_message(chat_id=update.effective_chat.id, text="Please enter the name:")
@@ -50,31 +42,15 @@ async def upload_category(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def upload_location(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data['location'] = update.message.text
-<<<<<<< HEAD
-    await context.bot.send_message(chat_id=update.effective_chat.id, text="Please enter the details:")
-    return DETAILS
-
-async def upload_details(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    context.user_data['details'] = update.message.text
-=======
     await context.bot.send_message(chat_id=update.effective_chat.id, text="Please enter the description:")
     return DETAILS
 
 async def upload_details(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data['description'] = update.message.text
->>>>>>> c899748a2451722d99a1674cd36ae613e948908f
     name = context.user_data['name']
     category = context.user_data['category']
     location = context.user_data['location']
     contact = update.effective_user.id
-<<<<<<< HEAD
-    details = context.user_data['details']
-    resource_id = dbupload(name, category, location, contact, details)
-    if resource_id:
-        await context.bot.send_message(chat_id=update.effective_chat.id, text="Uploaded successfully!")
-    else:
-       await context.bot.send_message(chat_id=update.effective_chat.id, text="Failed to upload. Please try again.")
-=======
     description = context.user_data['description']
     resource_id = dbupload(name, category, location, contact, description)
     
@@ -87,7 +63,6 @@ async def upload_details(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data.clear()
     # End the conversation
     return ConversationHandler.END
->>>>>>> c899748a2451722d99a1674cd36ae613e948908f
 
 async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await context.bot.send_message(chat_id=update.effective_chat.id, text="Cancelled.")
@@ -95,19 +70,6 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # search function
 async def search(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if context.args:
-<<<<<<< HEAD
-        query = ' '.join(context.args)
-        print(f"Searching for: {query}")
-        results = dbsearch(query)
-        if results:
-            await context.bot.send_message(chat_id=update.effective_chat.id, text="Here are the results:")
-            for result in results:
-                await context.bot.send_message(chat_id=update.effective_chat.id, text=result)
-        else:
-            await context.bot.send_message(chat_id=update.effective_chat.id, text="No results found.")
-    else:
-        await context.bot.send_message(chat_id=update.effective_chat.id, text="Please provide a search query.")
-=======
         # Split the search terms and remove empty strings
         search_terms = [term.lower() for term in context.args if term.strip()]
         
@@ -203,13 +165,12 @@ async def delete_resource_command(update: Update, context: ContextTypes.DEFAULT_
             chat_id=update.effective_chat.id,
             text="⚠️ Invalid resource ID. Please provide a valid number."
         )
->>>>>>> c899748a2451722d99a1674cd36ae613e948908f
 
 def main():
     # Create the application
     application = (
         ApplicationBuilder()
-        .token('7908797482:AAH5LvN9tNRf5dV8Bjt-iTLem1zUj34gUrA')
+        .token(os.getenv('BOT_TOKEN'))
         .build()
     )
 
@@ -226,11 +187,8 @@ def main():
         fallbacks=[CommandHandler("cancel", cancel)]
     ))
     application.add_handler(CommandHandler("search", search))
-<<<<<<< HEAD
-=======
     application.add_handler(CommandHandler("myresources", my_resources))
     application.add_handler(CommandHandler("delete", delete_resource_command))
->>>>>>> c899748a2451722d99a1674cd36ae613e948908f
 
     # Run the application
     application.run_polling(allowed_updates=Update.ALL_TYPES)
