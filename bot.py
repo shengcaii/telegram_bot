@@ -1,5 +1,5 @@
 from telegram import Update
-from telegram.ext import CommandHandler, MessageHandler, filters, ApplicationBuilder, ConversationHandler, ContextTypes
+from telegram.ext import CommandHandler, MessageHandler, filters, ConversationHandler, ContextTypes
 from database import dbupload, dbsearch, dbdelete, db_get_data
 import os
 from dotenv import load_dotenv
@@ -181,7 +181,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "2. Use /search followed by keywords to find resources\n"
         "3. View your uploads with /myresources\n"
         "4. Delete your resources using /delete [resource_id]\n\n"
-        "❓ Need more help? Contact @admin"
+        "❓ Need more help? Contact [@admin](t.me/shengca1)"
     )
     
     await update.message.reply_text(help_text, parse_mode='Markdown')
