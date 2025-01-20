@@ -1,20 +1,3 @@
-#!/usr/bin/env python
-# pylint: disable=unused-argument
-# This program is dedicated to the public domain under the CC0 license.
-
-"""
-Simple Bot to reply to Telegram messages.
-
-First, a few handler functions are defined. Then, those functions are passed to
-the Application and registered at their respective places.
-Then, the bot is started and runs until we press Ctrl-C on the command line.
-
-Usage:
-Basic Echobot example, repeats messages.
-Press Ctrl-C on the command line or send a signal to the process to stop the
-bot.
-"""
-
 import logging
 from flask import Flask, request
 import telegram
@@ -51,13 +34,15 @@ app = Flask(__name__)
 # Initialize bot application
 application = None
 
-def init_bot():
+async def init_bot():
     """Initialize the bot application"""
     global application
     if not application:
         application = Application.builder().token(BOT_TOKEN).build()
         # Set up handlers
         initialize_bot(application)
+        # Initialize the application - THIS IS THE KEY FIX
+        await application.initialize()
     return application
 
 @app.route('/')
