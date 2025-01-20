@@ -1,12 +1,23 @@
 #!/usr/bin/env python
-# pylint: disable=unused-argument, wrong-import-position
+# pylint: disable=unused-argument
+# This program is dedicated to the public domain under the CC0 license.
 
 """
-Simple Bot to handle webhooks using Flask.
+Simple Bot to reply to Telegram messages.
+
+First, a few handler functions are defined. Then, those functions are passed to
+the Application and registered at their respective places.
+Then, the bot is started and runs until we press Ctrl-C on the command line.
+
+Usage:
+Basic Echobot example, repeats messages.
+Press Ctrl-C on the command line or send a signal to the process to stop the
+bot.
 """
 
 import logging
 from flask import Flask, request
+import telegram
 from telegram import Update
 from telegram.ext import (
     Application,
@@ -15,11 +26,7 @@ from telegram.ext import (
     filters,
     ConversationHandler,
 )
-from bot import (
-    start, upload_start, search, my_resources, 
-    delete_resource_command, upload_name, upload_category, 
-    upload_location, upload_details, cancel
-)
+from bot import initialize_bot
 from database import init_db
 import os
 from dotenv import load_dotenv
@@ -38,85 +45,73 @@ BOT_TOKEN = os.getenv("BOT_TOKEN")
 WEBHOOK_URL = os.getenv("WEBHOOK_URL")
 PORT = int(os.environ.get("PORT", 8080))
 
-# States for conversation
-NAME, CATEGORY, LOCATION, DETAILS = range(4)
-
 # Initialize Flask app
 app = Flask(__name__)
 
-# Create global application instance
-application = Application.builder().token(BOT_TOKEN).build()
+# Initialize bot application
+application = None
 
-def setup_handlers():
-    """Set up all handlers for the application"""
-    # Add command handlers
-    application.add_handler(CommandHandler("start", start))
-    application.add_handler(CommandHandler("search", search))
-    application.add_handler(CommandHandler("myresources", my_resources))
-    application.add_handler(CommandHandler("delete", delete_resource_command))
+def init_bot():
+    """Initialize the bot application"""
+    global application
+    if not application:
+        application = Application.builder().token(BOT_TOKEN).build()
+        # Set up handlers
+        initialize_bot(application)
+    return application
 
-    # Add conversation handler
-    conv_handler = ConversationHandler(
-        entry_points=[CommandHandler("upload", upload_start)],
-        states={
-            NAME: [MessageHandler(filters.TEXT & ~filters.COMMAND, upload_name)],
-            CATEGORY: [MessageHandler(filters.TEXT & ~filters.COMMAND, upload_category)],
-            LOCATION: [MessageHandler(filters.TEXT & ~filters.COMMAND, upload_location)],
-            DETAILS: [MessageHandler(filters.TEXT & ~filters.COMMAND, upload_details)]
-        },
-        fallbacks=[CommandHandler("cancel", cancel)]
-    )
-    application.add_handler(conv_handler)
-
-@app.route("/")
+@app.route('/')
 def index():
-    """Home route to check if the bot is running."""
-    return "Bot is running!"
+    return 'Bot is running!'
 
-@app.route("/webhook", methods=["POST"])
-async def webhook():
-    """Handle incoming webhook updates."""
+@app.route('/webhook', methods=['POST'])
+def webhook():
+    """Handle incoming webhook updates"""
+    if request.method == "POST":
+        try:
+            # Get the update
+            update = Update.de_json(request.get_json(), init_bot().bot)
+            
+            # Create an event loop for this request
+            asyncio.set_event_loop(asyncio.new_event_loop())
+            
+            # Process update
+            asyncio.get_event_loop().run_until_complete(
+                application.process_update(update)
+            )
+            
+            return "ok"
+        except Exception as e:
+            logger.error(f"Error processing update: {e}", exc_info=True)
+            return str(e), 500
+    
+    return "ok"
+
+def setup_webhook():
+    """Set up webhook using direct Telegram API"""
     try:
-        # Parse the incoming update
-        update = Update.de_json(request.get_json(force=True), application.bot)
+        bot = telegram.Bot(BOT_TOKEN)
+        webhook_url = f"{WEBHOOK_URL}/webhook"
         
-        # Process the update asynchronously
-        await application.process_update(update)
+        # Create event loop for webhook setup
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
         
-        return "ok"
+        # Set webhook
+        loop.run_until_complete(bot.set_webhook(url=webhook_url))
+        logger.info(f"Webhook set up successfully at {webhook_url}")
+        
     except Exception as e:
-        logger.error(f"Error processing update: {e}", exc_info=True)
-        return str(e), 500
+        logger.error(f"Failed to set webhook: {e}", exc_info=True)
+        raise
 
-async def initialize():
-    """Initialize the bot application."""
+if __name__ == "__main__":
     # Initialize database
     init_db()
     
-    # Set up handlers
-    setup_handlers()
+    # Initialize bot and set up webhook
+    init_bot()
+    setup_webhook()
     
-    # Initialize the application
-    await application.initialize()
-    
-    # Set webhook
-    await application.bot.set_webhook(url=f"{WEBHOOK_URL}/webhook")
-
-def run():
-    """Run the application."""
-    # Create a new event loop and run the initialize function
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    try:
-        loop.run_until_complete(initialize())
-    except Exception as e:
-        logger.error(f"Error during initialization: {e}", exc_info=True)
-    finally:
-        loop.close()
-
-if __name__ == "__main__":
-    # Initialize the bot
-    run()
-    
-    # Start the Flask app
+    # Run Flask app
     app.run(host="0.0.0.0", port=PORT)

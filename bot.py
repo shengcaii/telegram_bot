@@ -1,6 +1,6 @@
 from telegram import Update
 from telegram.ext import CommandHandler, MessageHandler, filters, ApplicationBuilder, ConversationHandler, ContextTypes
-from database import dbupload, dbsearch, delete_resource
+from database import dbupload, dbsearch, dbdelete, db_get_data
 import os
 from dotenv import load_dotenv
 import logging
@@ -114,7 +114,7 @@ async def search(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def my_resources(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
-    resources = get_user_resources(user_id)
+    resources = db_get_data(user_id)
     
     if not resources:
         await context.bot.send_message(
@@ -134,7 +134,7 @@ async def my_resources(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"📍 *Name:* {resource[1]}\n"
             f"🏷️ *Category:* {resource[2]}\n"
             f"📌 *Location:* {resource[3]}\n"
-            f"📝 *Details:* {resource[4]}\n\n"
+            f"📝 *Description:* {resource[4]}\n\n"
             f"_Use /delete {resource[0]} to remove this resource_\n"
             f"_Use /update {resource[0]} to modify this resource_"
         )
@@ -166,16 +166,31 @@ async def delete_resource_command(update: Update, context: ContextTypes.DEFAULT_
             text="⚠️ Invalid resource ID. Please provide a valid number."
         )
 
-def main():
-    # Create the application
-    application = (
-        ApplicationBuilder()
-        .token(os.getenv('BOT_TOKEN'))
-        .build()
+async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Send a message when the command /help is issued."""
+    help_text = (
+        "🤖 *Available Commands:*\n\n"
+        "/start - Start the bot\n"
+        "/help - Show this help message\n"
+        "/upload - Upload a new resource\n"
+        "/search [terms] - Search for resources (e.g., /search sport yangon)\n"
+        "/myresources - View your uploaded resources\n"
+        "/delete [id] - Delete a resource by ID\n\n"
+        "📝 *How to use:*\n"
+        "1. Use /upload to add a new resource\n"
+        "2. Use /search followed by keywords to find resources\n"
+        "3. View your uploads with /myresources\n"
+        "4. Delete your resources using /delete [resource_id]\n\n"
+        "❓ Need more help? Contact @admin"
     )
+    
+    await update.message.reply_text(help_text, parse_mode='Markdown')
 
-    # Add handlers to the application
+def initialize_bot(application):
+    """Initialize bot handlers"""
+    # Add handlers to the provided application instance
     application.add_handler(CommandHandler("start", start))
+    application.add_handler(CommandHandler("help", help_command))
     application.add_handler(ConversationHandler(
         entry_points=[CommandHandler("upload", upload_start)],
         states={
@@ -189,10 +204,3 @@ def main():
     application.add_handler(CommandHandler("search", search))
     application.add_handler(CommandHandler("myresources", my_resources))
     application.add_handler(CommandHandler("delete", delete_resource_command))
-
-    # Run the application
-    application.run_polling(allowed_updates=Update.ALL_TYPES)
-    application.idle()
-
-if __name__ == '__main__':
-    main()

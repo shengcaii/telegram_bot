@@ -37,8 +37,11 @@ def init_db():
             name VARCHAR(100),
             category VARCHAR(100),
             location VARCHAR(100),
-            contact VARCHAR(100),
-            details TEXT
+            user_id BIGINT,
+            description TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            is_deleted BOOLEAN DEFAULT FALSE
         );
         '''
         cursor.execute(create_table_query)
@@ -110,7 +113,7 @@ def dbsearch(query_terms):
         print("No connection to the database.")
         return []
 
-def delete_resource(resource_id, user_id):
+def dbdelete(resource_id, user_id):
     connection = get_db_connection()
     if connection:
         try:
@@ -142,7 +145,35 @@ def delete_resource(resource_id, user_id):
             connection.close()
     return False, "Database connection error"
 
-def update_resource(resource_id, user_id, updates):
+def db_get_data(user_id):
+    """Fetch all active resources uploaded by a specific user"""
+    connection = get_db_connection()
+    if connection:
+        try:
+            cursor = connection.cursor()
+            
+            # Query to get all active resources for the user
+            select_query = '''
+                SELECT id, name, category, location, description 
+                FROM resource 
+                WHERE user_id = %s 
+                AND is_deleted = FALSE
+                ORDER BY id DESC
+            '''
+            cursor.execute(select_query, (str(user_id),))
+            results = cursor.fetchall()
+            
+            return results
+            
+        except Exception as e:
+            return False, f"Error fetching resources: {str(e)}"
+        finally:
+            cursor.close()
+            connection.close()
+    
+    return False, "Database connection error"
+
+def dbupdate(resource_id, user_id, updates):
     connection = get_db_connection()
     if connection:
         try:
