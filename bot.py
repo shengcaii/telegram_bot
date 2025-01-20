@@ -195,6 +195,7 @@ async def error_handler(update: Update, context):
 
 def initialize_bot(application):
     """Initialize bot handlers"""
+    print("Initializing bot...")
     # Add handlers to the provided application instance
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("help", help_command))
@@ -212,3 +213,5 @@ def initialize_bot(application):
     application.add_handler(CommandHandler("search", search))
     application.add_handler(CommandHandler("myresources", my_resources))
     application.add_handler(CommandHandler("delete", delete_resource_command))
+
+    print("Bot initialized successfully!")
