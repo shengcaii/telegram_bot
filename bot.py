@@ -154,7 +154,7 @@ async def delete_resource_command(update: Update, context: ContextTypes.DEFAULT_
     
     try:
         resource_id = int(context.args[0])
-        success, message = delete_resource(resource_id, update.effective_user.id)
+        success, message = dbdelete(resource_id, update.effective_user.id)
         
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
@@ -211,3 +211,6 @@ def initialize_bot(application):
     application.add_handler(CommandHandler("search", search))
     application.add_handler(CommandHandler("myresources", my_resources))
     application.add_handler(CommandHandler("delete", delete_resource_command))
+
+    # Start the bot using long
+    application.run_polling()
