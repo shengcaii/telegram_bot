@@ -15,7 +15,6 @@ from telegram.ext import (
     filters,
     ConversationHandler,
 )
-import asyncio
 from bot import (
     start, upload_start, search, my_resources, 
     delete_resource_command, upload_name, upload_category, 
@@ -24,6 +23,7 @@ from bot import (
 from database import init_db
 import os
 from dotenv import load_dotenv
+import asyncio
 
 # Enable logging
 logging.basicConfig(
@@ -88,12 +88,8 @@ async def webhook():
         logger.error(f"Error processing update: {e}", exc_info=True)
         return str(e), 500
 
-async def set_webhook():
-    """Set the webhook URL."""
-    await application.bot.set_webhook(url=f"{WEBHOOK_URL}/webhook")
-
-def run():
-    """Run the application."""
+async def initialize():
+    """Initialize the bot application."""
     # Initialize database
     init_db()
     
@@ -101,11 +97,26 @@ def run():
     setup_handlers()
     
     # Initialize the application
-    application.run_polling()
+    await application.initialize()
+    
+    # Set webhook
+    await application.bot.set_webhook(url=f"{WEBHOOK_URL}/webhook")
+
+def run():
+    """Run the application."""
+    # Create a new event loop and run the initialize function
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    try:
+        loop.run_until_complete(initialize())
+    except Exception as e:
+        logger.error(f"Error during initialization: {e}", exc_info=True)
+    finally:
+        loop.close()
 
 if __name__ == "__main__":
-    # Set the webhook URL
-    asyncio.run(set_webhook())
+    # Initialize the bot
+    run()
     
     # Start the Flask app
     app.run(host="0.0.0.0", port=PORT)
