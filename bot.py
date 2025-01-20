@@ -212,6 +212,3 @@ def initialize_bot(application):
     application.add_handler(CommandHandler("search", search))
     application.add_handler(CommandHandler("myresources", my_resources))
     application.add_handler(CommandHandler("delete", delete_resource_command))
-
-    # Start the bot using long
-    application.run_polling()
