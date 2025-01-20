@@ -186,11 +186,18 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     await update.message.reply_text(help_text, parse_mode='Markdown')
 
+async def error_handler(update: Update, context):
+    """Log errors and send a message to the user."""
+    logger.error(f"Error occurred: {context.error}", exc_info=True)
+    if update and update.message:
+        await update.message.reply_text("An error occurred. Please try again later.")
+
 def initialize_bot(application):
     """Initialize bot handlers"""
     # Add handlers to the provided application instance
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("help", help_command))
+    application.add_error_handler(error_handler)
     application.add_handler(ConversationHandler(
         entry_points=[CommandHandler("upload", upload_start)],
         states={
