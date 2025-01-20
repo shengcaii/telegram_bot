@@ -5,10 +5,10 @@ from telegram.ext import ApplicationBuilder
 import requests
 import os
 
-app = Flask(__name__)
 bot_app = ApplicationBuilder().token(BOT_TOKEN).build()
 initialize_bot(bot_app)
 
+app = Flask(__name__)
 WEBHOOK_URL = os.getenv("WEBHOOK_URL")
 
 @app.route('/')
@@ -20,7 +20,9 @@ def webhook():
     """Handle incoming webhook updates"""
     if request.method == "POST":
         try:
-            update = Update.de_json(request.get_json(), bot_app.bot)
+            data = request.get_json()
+            print('Recieved update:', data)
+            update = Update.de_json(data, bot_app.bot)
             bot_app.process_update(update)
             return "ok"
         except Exception as e:
