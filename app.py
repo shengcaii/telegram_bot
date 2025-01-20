@@ -1,19 +1,14 @@
 import logging
 from flask import Flask, request
-import telegram
 from telegram import Update
 from telegram.ext import (
     Application,
-    CommandHandler,
-    MessageHandler,
-    filters,
-    ConversationHandler,
 )
 from bot import initialize_bot
 from database import init_db
 import os
 from dotenv import load_dotenv
-import asyncio
+import requests
 
 # Enable logging
 logging.basicConfig(
@@ -32,26 +27,8 @@ PORT = int(os.environ.get("PORT", 8080))
 app = Flask(__name__)
 
 # Initialize bot application
-application = None
-
-async def init_bot():
-    """Initialize the bot application"""
-    global application
-    if not application:
-        application = Application.builder().token(BOT_TOKEN).build()
-        # Set up handlers
-        initialize_bot(application)
-        # Initialize the application - THIS IS THE KEY FIX
-        await application.initialize()
-    return application
-def setup_bot():
-    """Initial setup of bot - called once at startup"""
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    try:
-        return loop.run_until_complete(init_bot())
-    finally:
-        loop.close()
+application = Application.builder().token(BOT_TOKEN).build()
+initialize_bot(application)
 
 @app.route('/')
 def index():
@@ -62,50 +39,22 @@ def webhook():
     """Handle incoming webhook updates"""
     if request.method == "POST":
         try:
-            # Use the already initialized application
             update = Update.de_json(request.get_json(), application.bot)
-            
-            # Process update in a new event loop
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            try:
-                loop.run_until_complete(
-                    application.process_update(update)
-                )
-            finally:
-                loop.close()
-            
+            application.process_update(update)
             return "ok"
         except Exception as e:
             logger.error(f"Error processing update: {e}", exc_info=True)
             return str(e), 500
-    
     return "ok"
 
-def setup_webhook():
-    """Set up webhook using direct Telegram API"""
-    try:
-        bot = telegram.Bot(BOT_TOKEN)
-        webhook_url = f"{WEBHOOK_URL}/webhook"
-        
-        # Create event loop for webhook setup
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        
-        # Set webhook
-        loop.run_until_complete(bot.set_webhook(url=webhook_url))
-        logger.info(f"Webhook set up successfully at {webhook_url}")
-        
-    except Exception as e:
-        logger.error(f"Failed to set webhook: {e}", exc_info=True)
-# Initialize database
-init_db()
-    
- # Initialize bot and set up webhook
-setup_bot()
-setup_webhook()
-
-    
 if __name__ == "__main__":
+    # Initialize database
+    init_db()
+
+    # Set the webhook URL
+    webhook_url = f"{WEBHOOK_URL}/webhook"
+    response = requests.get(f"https://api.telegram.org/bot{BOT_TOKEN}/setWebhook?url={webhook_url}")
+    print(response.json())
+
     # Run Flask app
     app.run(host="0.0.0.0", port=PORT)
