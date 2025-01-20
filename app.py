@@ -98,15 +98,13 @@ def setup_webhook():
         
     except Exception as e:
         logger.error(f"Failed to set webhook: {e}", exc_info=True)
-        raise
-
+# Initialize database
+init_db()
+    
+ # Initialize bot and set up webhook
+init_bot()
+setup_webhook()
+    
 if __name__ == "__main__":
-    # Initialize database
-    init_db()
-    
-    # Initialize bot and set up webhook
-    init_bot()
-    setup_webhook()
-    
     # Run Flask app
     app.run(host="0.0.0.0", port=PORT)
