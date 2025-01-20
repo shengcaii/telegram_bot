@@ -102,8 +102,9 @@ def setup_webhook():
 init_db()
     
  # Initialize bot and set up webhook
-init_bot()
+setup_bot()
 setup_webhook()
+
     
 if __name__ == "__main__":
     # Run Flask app
