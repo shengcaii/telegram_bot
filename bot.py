@@ -18,6 +18,7 @@ load_dotenv()
 
 # Replace with your bot token
 BOT_TOKEN = os.getenv("BOT_TOKEN")
+PORT = os.getenv("PORT")
 
 # Define states for the conversation
 NAME, CATEGORY, LOCATION, DETAILS = range(4)

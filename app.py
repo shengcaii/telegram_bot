@@ -1,4 +1,4 @@
-from bot import initialize_bot, BOT_TOKEN
+from bot import initialize_bot, BOT_TOKEN, PORT
 from flask import Flask
 from telegram.ext import ApplicationBuilder
 
@@ -13,4 +13,4 @@ def home():
 
 
 if __name__ == '__main__':
-    app.run()
+    app.run('0.0.0.0', port=PORT)
