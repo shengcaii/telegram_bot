@@ -44,6 +44,14 @@ async def init_bot():
         # Initialize the application - THIS IS THE KEY FIX
         await application.initialize()
     return application
+def setup_bot():
+    """Initial setup of bot - called once at startup"""
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    try:
+        return loop.run_until_complete(init_bot())
+    finally:
+        loop.close()
 
 @app.route('/')
 def index():
@@ -54,16 +62,18 @@ def webhook():
     """Handle incoming webhook updates"""
     if request.method == "POST":
         try:
-            # Get the update
-            update = Update.de_json(request.get_json(), init_bot().bot)
+            # Use the already initialized application
+            update = Update.de_json(request.get_json(), application.bot)
             
-            # Create an event loop for this request
-            asyncio.set_event_loop(asyncio.new_event_loop())
-            
-            # Process update
-            asyncio.get_event_loop().run_until_complete(
-                application.process_update(update)
-            )
+            # Process update in a new event loop
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            try:
+                loop.run_until_complete(
+                    application.process_update(update)
+                )
+            finally:
+                loop.close()
             
             return "ok"
         except Exception as e:
