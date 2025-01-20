@@ -18,14 +18,14 @@ def home():
     return {'status': 200, 'message': 'Bot is running'}
 
 @app.route('/webhook', methods=['POST'])
-def webhook():
+async def webhook():
     """Handle incoming webhook updates"""
     if request.method == "POST":
         try:
             data = request.get_json()
             print('Recieved update:', data)
             update = Update.de_json(data, bot_app.bot)
-            bot_app.process_update(update)
+            await bot_app.process_update(update)
             return "ok"
         except Exception as e:
             return str(e), 500
