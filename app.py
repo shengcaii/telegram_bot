@@ -1,5 +1,6 @@
 from bot import initialize_bot, BOT_TOKEN, PORT
 from flask import Flask, request
+from asgiref.wsgi import WsgiToAsgi
 from telegram import Update
 from telegram.ext import ApplicationBuilder
 import requests
@@ -9,6 +10,7 @@ bot_app = ApplicationBuilder().token(BOT_TOKEN).build()
 initialize_bot(bot_app)
 
 app = Flask(__name__)
+asgi_app = WsgiToAsgi(app)
 WEBHOOK_URL = os.getenv("WEBHOOK_URL")
 
 @app.route('/')
