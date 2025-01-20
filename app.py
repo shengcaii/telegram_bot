@@ -28,6 +28,7 @@ async def webhook():
             await bot_app.process_update(update)
             return "ok"
         except Exception as e:
+            print("Error processing update:", str(e))
             return str(e), 500
     return "ok"
 
