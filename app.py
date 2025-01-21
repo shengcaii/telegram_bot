@@ -19,7 +19,10 @@ app = Flask(__name__)
 application = ApplicationBuilder().token(BOT_TOKEN).build()
 initialize_bot(application)
 
-async def main():
+
+# Convert flask appp to asgi
+asgi_app = WsgiToAsgi(app)
+async def setup_webhook():
     await application.initialize()
     await application.bot.set_webhook(url=f"{WEBHOOK_URL}/webhook")
     await application.start()
@@ -43,20 +46,24 @@ async def webhook():
             return Response(status=500)
     return "ok"
 
-# Convert flask appp to asgi
-asgi_app = WsgiToAsgi(app)
-async def main()-> None:
-     # Run with Uvicorn
-    webserver = uvicorn.run(
-        app=asgi_app,
-        host="0.0.0.0",
-        port=PORT,
-        log_level="info"
-    )
+async def main():
     # Run application
     async with application:
         await application.start()
-        await webserver.serve()
+        await setup_webhook()
         await application.stop()
 
-asyncio.run(main())
+# Ensure the event loop is properly managed
+try:
+    loop = asyncio.get_event_loop()
+    if loop.is_running():
+        loop.create_task(main())
+    else:
+        asyncio.run(main())
+except RuntimeError as e:
+    if "There is no current event loop in thread" in str(e):
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        loop.run_until_complete(main())
+    else:
+        raise
