@@ -25,7 +25,6 @@ asgi_app = WsgiToAsgi(app)
 async def setup_webhook():
     await application.initialize()
     await application.bot.set_webhook(url=f"{WEBHOOK_URL}/webhook")
-    await application.start()
 
 @app.route('/')
 def home():
@@ -37,7 +36,6 @@ async def webhook():
     if request.method == "POST":
         try:
             json_data =  request.get_json()
-            print('Recieved update:', json_data)
             update = Update.de_json(json_data, application.bot)
             await application.update_queue.put(update)
             return Response(status=200)
