@@ -19,6 +19,10 @@ NAME, CATEGORY, LOCATION, DETAILS = range(4)
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     first_name = update.effective_user.first_name
     await context.bot.send_message(chat_id=update.effective_chat.id, text=f"Hey {first_name}! Welcome to the advertisor bot.")
+    await context.bot.send_message(chat_id=update.effective_chat.id, text="Use /help to see available commands.")
+
+async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await context.bot.send_message(chat_id=update.effective_chat.id, text=update.message.text)
 
 async def upload_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await context.bot.send_message(chat_id=update.effective_chat.id, text="Please enter the name:")
