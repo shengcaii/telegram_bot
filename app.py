@@ -25,7 +25,7 @@ asgi_app = WsgiToAsgi(app)
 async def setup_webhook():
     await application.initialize()
     await application.bot.set_webhook(url=f"{WEBHOOK_URL}/webhook")
-    await application.strt()
+    await application.start()
 
 @app.route('/')
 def home():
