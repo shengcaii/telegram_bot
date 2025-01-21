@@ -43,19 +43,20 @@ async def webhook():
             return Response(status=500)
     return "ok"
 
-if __name__ == '__main__':
-    # Convert flask appp to asgi
-    asgi_app = WsgiToAsgi(app)
-
-    # Start everything
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    loop.run_until_complete(main())
-
-    # Run with Uvicorn
-    uvicorn.run(
+# Convert flask appp to asgi
+asgi_app = WsgiToAsgi(app)
+async def main()-> None:
+     # Run with Uvicorn
+    webserver = uvicorn.run(
         app=asgi_app,
         host="0.0.0.0",
         port=PORT,
         log_level="info"
     )
+    # Run application
+    async with application:
+        await application.start()
+        await webserver.serve()
+        await application.stop()
+
+asyncio.run(main())
