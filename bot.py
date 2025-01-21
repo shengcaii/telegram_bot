@@ -3,15 +3,6 @@ from telegram.ext import CommandHandler, MessageHandler, filters, ConversationHa
 from database import dbupload, dbsearch, dbdelete, db_get_data
 import os
 from dotenv import load_dotenv
-import logging
-
-logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO
-)
-# set higher logging level for httpx to avoid all GET and POST requests being logged
-logging.getLogger("httpx").setLevel(logging.WARNING)
-
-logger = logging.getLogger(__name__)
 
 # Load environment variables from .env file
 load_dotenv()
@@ -19,6 +10,8 @@ load_dotenv()
 # Replace with your bot token
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 PORT = os.getenv("PORT")
+WEBHOOK_URL = os.getenv("WEBHOOK_URL")
+
 
 # Define states for the conversation
 NAME, CATEGORY, LOCATION, DETAILS = range(4)
