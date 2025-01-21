@@ -48,6 +48,7 @@ async def webhook():
 async def main():
     # Run application
     async with application:
+        await application.start()
         await setup_webhook()
         await application.stop()
 
