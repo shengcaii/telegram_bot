@@ -200,7 +200,6 @@ def initialize_bot(application):
     # Add handlers to the provided application instance
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("help", help_command))
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, echo))
     application.add_error_handler(error_handler)
     application.add_handler(ConversationHandler(
         entry_points=[CommandHandler("upload", upload_start)],
@@ -215,5 +214,6 @@ def initialize_bot(application):
     application.add_handler(CommandHandler("search", search))
     application.add_handler(CommandHandler("myads", my_ads))
     application.add_handler(CommandHandler("delete", delete_ads))
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, echo))
 
     print("Bot initialized successfully!")
