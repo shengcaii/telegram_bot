@@ -45,7 +45,7 @@ async def upload_category(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def upload_location(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data['location'] = update.message.text
-    await context.bot.send_message(chat_id=update.effective_chat.id, text="Please enter the description:")
+    await context.bot.send_message(chat_id=update.effective_chat.id, text="Please enter the description:\n\nOr use /cancel to stop the upload process.")
     return DESCRIPTION
 
 async def upload_description(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -55,12 +55,12 @@ async def upload_description(update: Update, context: ContextTypes.DEFAULT_TYPE)
     location = context.user_data['location']
     contact = update.effective_user.id
     description = context.user_data['description']
-    resource_id = dbupload(name, category, location, contact, description)
+    ads_id = dbupload(name, category, location, contact, description)
     
-    if resource_id:
-        await context.bot.send_message(chat_id=update.effective_chat.id, text="Uploaded successfully!")
+    if ads_id:
+        await context.bot.send_message(chat_id=update.effective_chat.id, text="✅ Uploaded successfully!")
     else:
-        await context.bot.send_message(chat_id=update.effective_chat.id, text="Failed to upload. Please try again.")
+        await context.bot.send_message(chat_id=update.effective_chat.id, text="❌ Failed to upload. Please try again.")
     
     # Clear the user data
     context.user_data.clear()
@@ -69,6 +69,10 @@ async def upload_description(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
 async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await context.bot.send_message(chat_id=update.effective_chat.id, text="Cancelled.")
+    # Clear the user data
+    context.user_data.clear()
+    # End the conversation
+    return ConversationHandler.END
 
 # search function
 async def search(update: Update, context: ContextTypes.DEFAULT_TYPE):

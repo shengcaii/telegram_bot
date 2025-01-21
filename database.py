@@ -63,11 +63,11 @@ def dbupload(name, category, location, user_id, description):
         RETURNING id;
         '''
         cursor.execute(insert_query, (name, category, location, user_id, description))
-        resource_id = cursor.fetchone()[0]
+        ads_id = cursor.fetchone()[0]
         connection.commit()
         cursor.close()
         connection.close()
-        return resource_id
+        return ads_id
     else:
         return None
 
