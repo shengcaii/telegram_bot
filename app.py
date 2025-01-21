@@ -36,7 +36,7 @@ async def webhook():
     """Handle incoming webhook updates"""
     if request.method == "POST":
         try:
-            json_data = await request.get_json()
+            json_data =  request.get_json()
             print('Recieved update:', json_data)
             update = Update.de_json(json_data, application.bot)
             await application.update_queue.put(update)
