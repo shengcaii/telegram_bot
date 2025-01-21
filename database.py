@@ -53,16 +53,16 @@ def init_db():
     else:
         print("No connection available.")
 
-def dbupload(name, category, location, contact, details):
+def dbupload(name, category, location, user_id, description):
     connection = get_db_connection()
     if connection:
         cursor = connection.cursor()
         insert_query = '''
-        INSERT INTO resource (name, category, location, contact, details)
+        INSERT INTO resource (name, category, location, user_id, description)
         VALUES (%s, %s, %s, %s, %s)
         RETURNING id;
         '''
-        cursor.execute(insert_query, (name, category, location, contact, details))
+        cursor.execute(insert_query, (name, category, location, user_id, description))
         resource_id = cursor.fetchone()[0]
         connection.commit()
         cursor.close()
@@ -113,7 +113,7 @@ def dbsearch(query_terms):
         print("No connection to the database.")
         return []
 
-def dbdelete(resource_id, user_id):
+def dbdelete(ad_id, user_id):
     connection = get_db_connection()
     if connection:
         try:
@@ -123,7 +123,7 @@ def dbdelete(resource_id, user_id):
                 SELECT id FROM resource 
                 WHERE id = %s AND user_id = %s AND is_deleted = FALSE
             '''
-            cursor.execute(verify_query, (resource_id, str(user_id)))
+            cursor.execute(verify_query, (ad_id, str(user_id)))
             if not cursor.fetchone():
                 return False, "Ads not found or you don't have permission to delete it"
             
@@ -134,7 +134,7 @@ def dbdelete(resource_id, user_id):
                 WHERE id = %s AND user_id = %s
                 RETURNING id
             '''
-            cursor.execute(delete_query, (resource_id, str(user_id)))
+            cursor.execute(delete_query, (ad_id, str(user_id)))
             connection.commit()
             return True, "Ads deleted successfully"
         except Exception as e:
@@ -173,7 +173,7 @@ def db_get_data(user_id):
     
     return False, "Database connection error"
 
-def dbupdate(resource_id, user_id, updates):
+def dbupdate(ads_id, user_id, updates):
     connection = get_db_connection()
     if connection:
         try:
@@ -183,7 +183,7 @@ def dbupdate(resource_id, user_id, updates):
                 SELECT id FROM resource 
                 WHERE id = %s AND user_id = %s AND is_deleted = FALSE
             '''
-            cursor.execute(verify_query, (resource_id, str(user_id)))
+            cursor.execute(verify_query, (ads_id, str(user_id)))
             if not cursor.fetchone():
                 return False, "Ads not found or you don't have permission to update it"
             
@@ -199,7 +199,7 @@ def dbupdate(resource_id, user_id, updates):
                 return False, "No valid fields to update"
             
             update_fields.append("updated_at = CURRENT_TIMESTAMP")
-            params.extend([resource_id, str(user_id)])
+            params.extend([ads_id, str(user_id)])
             
             update_query = f'''
                 UPDATE resource 

@@ -1,11 +1,10 @@
-from bot import initialize_bot, BOT_TOKEN, PORT, WEBHOOK_URL
+from bot import initialize_bot, BOT_TOKEN, WEBHOOK_URL
 from flask import Flask, request, Response
 from asgiref.wsgi import WsgiToAsgi
 from telegram import Update
 from telegram.ext import ApplicationBuilder
 import asyncio
 import logging
-import uvicorn
 
 # Configure logging
 logging.basicConfig(

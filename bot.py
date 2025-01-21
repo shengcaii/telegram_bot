@@ -3,6 +3,11 @@ from telegram.ext import CommandHandler, MessageHandler, filters, ConversationHa
 from database import dbupload, dbsearch, dbdelete, db_get_data
 import os
 from dotenv import load_dotenv
+import logging
+
+# Enable logging
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Load environment variables from .env file
 load_dotenv()
@@ -14,15 +19,15 @@ WEBHOOK_URL = os.getenv("WEBHOOK_URL")
 
 
 # Define states for the conversation
-NAME, CATEGORY, LOCATION, DETAILS = range(4)
+NAME, CATEGORY, LOCATION, DESCRIPTION = range(4)
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     first_name = update.effective_user.first_name
-    await context.bot.send_message(chat_id=update.effective_chat.id, text=f"Hey {first_name}! Welcome to the advertisor bot.")
-    await context.bot.send_message(chat_id=update.effective_chat.id, text="Use /help to see available commands.")
+    await context.bot.send_message(chat_id=update.effective_chat.id, text=f"Hey {first_name}! Welcome to the Ads Bot.\n\nUse /help to see the available commands.")
 
 async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await context.bot.send_message(chat_id=update.effective_chat.id, text=update.message.text)
+    response_text = f"You said: {update.message.text}"
+    await context.bot.send_message(chat_id=update.effective_chat.id, text=response_text)
 
 async def upload_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await context.bot.send_message(chat_id=update.effective_chat.id, text="Please enter the name:")
@@ -41,9 +46,9 @@ async def upload_category(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def upload_location(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data['location'] = update.message.text
     await context.bot.send_message(chat_id=update.effective_chat.id, text="Please enter the description:")
-    return DETAILS
+    return DESCRIPTION
 
-async def upload_details(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def upload_description(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data['description'] = update.message.text
     name = context.user_data['name']
     category = context.user_data['category']
@@ -77,8 +82,7 @@ async def search(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 text="⚠️ Please provide a valid search query."
             )
             return
-            
-        print(f"Searching for terms: {search_terms}")
+        
         results = dbsearch(search_terms)
         
         if results:
@@ -110,31 +114,31 @@ async def search(update: Update, context: ContextTypes.DEFAULT_TYPE):
             text="⚠️ Please provide a search query. Example: /search sport yangon"
         )
 
-async def my_resources(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def my_ads(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
-    resources = db_get_data(user_id)
+    user_ads = db_get_data(user_id)
     
-    if not resources:
+    if not user_ads:
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
-            text="You haven't uploaded any resources yet."
+            text="You don't have any ads yet."
         )
         return
 
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
-        text="🗂 Your uploaded resources:"
+        text="🗂 Here is your ads:"
     )
     
-    for resource in resources:
+    for ads in user_ads:
         formatted_result = (
-            f"🆔 *Resource ID:* {resource[0]}\n"
-            f"📍 *Name:* {resource[1]}\n"
-            f"🏷️ *Category:* {resource[2]}\n"
-            f"📌 *Location:* {resource[3]}\n"
-            f"📝 *Description:* {resource[4]}\n\n"
-            f"_Use /delete {resource[0]} to remove this resource_\n"
-            f"_Use /update {resource[0]} to modify this resource_"
+            f"🆔 *Ads ID:* {ads[0]}\n"
+            f"📍 *Name:* {ads[1]}\n"
+            f"🏷️ *Category:* {ads[2]}\n"
+            f"📌 *Location:* {ads[3]}\n"
+            f"📝 *Description:* {ads[4]}\n\n"
+            f"_Use /delete {ads[0]} to remove this ads\n"
+            f"_Use /update {ads[0]} to modify this ads"
         )
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
@@ -142,17 +146,17 @@ async def my_resources(update: Update, context: ContextTypes.DEFAULT_TYPE):
             parse_mode='Markdown'
         )
 
-async def delete_resource_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def delete_ads(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not context.args:
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
-            text="⚠️ Please provide a resource ID. Example: /delete 123"
+            text="⚠️ Please provide ads ID. Example: /delete 123"
         )
         return
     
     try:
-        resource_id = int(context.args[0])
-        success, message = dbdelete(resource_id, update.effective_user.id)
+        ads_id = int(context.args[0])
+        success, message = dbdelete(ads_id, update.effective_user.id)
         
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
@@ -161,7 +165,7 @@ async def delete_resource_command(update: Update, context: ContextTypes.DEFAULT_
     except ValueError:
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
-            text="⚠️ Invalid resource ID. Please provide a valid number."
+            text="⚠️ Invalid ads ID. Please provide a valid one."
         )
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -170,15 +174,15 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "🤖 *Available Commands:*\n\n"
         "/start - Start the bot\n"
         "/help - Show this help message\n"
-        "/upload - Upload a new resource\n"
-        "/search [terms] - Search for resources (e.g., /search sport yangon)\n"
-        "/myresources - View your uploaded resources\n"
-        "/delete [id] - Delete a resource by ID\n\n"
+        "/upload - Upload a new ads\n"
+        "/search [category location] - Search for ads (e.g., /search sport yangon)\n"
+        "/myads - View your own ads\n"
+        "/delete [id] - Delete your ads by ID\n\n"
         "📝 *How to use:*\n"
-        "1. Use /upload to add a new resource\n"
-        "2. Use /search followed by keywords to find resources\n"
-        "3. View your uploads with /myresources\n"
-        "4. Delete your resources using /delete [resource_id]\n\n"
+        "1. Use /upload to add  new ads\n"
+        "2. Use /search followed by keywords to find ads\n"
+        "3. View your ads with /myads\n"
+        "4. Delete your ads using /delete [ads_id]\n\n"
         "❓ Need more help? Contact [@admin](t.me/shengca1)"
     )
     
@@ -196,6 +200,7 @@ def initialize_bot(application):
     # Add handlers to the provided application instance
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("help", help_command))
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, echo))
     application.add_error_handler(error_handler)
     application.add_handler(ConversationHandler(
         entry_points=[CommandHandler("upload", upload_start)],
@@ -203,12 +208,12 @@ def initialize_bot(application):
             NAME: [MessageHandler(filters.TEXT, upload_name)],
             CATEGORY: [MessageHandler(filters.TEXT, upload_category)],
             LOCATION: [MessageHandler(filters.TEXT, upload_location)],
-            DETAILS: [MessageHandler(filters.TEXT, upload_details)]
+            DESCRIPTION: [MessageHandler(filters.TEXT, upload_description)]
         },
         fallbacks=[CommandHandler("cancel", cancel)]
     ))
     application.add_handler(CommandHandler("search", search))
-    application.add_handler(CommandHandler("myresources", my_resources))
-    application.add_handler(CommandHandler("delete", delete_resource_command))
+    application.add_handler(CommandHandler("myads", my_ads))
+    application.add_handler(CommandHandler("delete", delete_ads))
 
     print("Bot initialized successfully!")
